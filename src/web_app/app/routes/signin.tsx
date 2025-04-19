@@ -14,6 +14,7 @@ import { styled } from "@mui/material/styles";
 import AppTheme from "../shared-theme/AppTheme";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
 import GDLogo from "app/assets/gd-logo.svg";
+import { useAuth } from "../auth/AuthProvider";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -62,18 +63,22 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const authDetails = useAuth();
+  
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.stopPropagation();
+    event.preventDefault(); 
+    
     if (emailError || passwordError) {
-      event.preventDefault();
       return;
     }
+    
     const data = new FormData(event.currentTarget);
-    // TODO: Send data to server
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
+    authDetails.loginAction({
+      email: data.get("email") as string,
+      password: data.get("password") as string,
     });
+
   };
 
   const validateInputs = () => {
@@ -164,7 +169,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 color={passwordError ? "error" : "primary"}
               />
             </FormControl>
-            {/* Add Remember me feature*/}
+            {/* TODO: Add Remember me feature*/}
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"
