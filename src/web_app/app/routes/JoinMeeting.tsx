@@ -1,5 +1,5 @@
 const JoinMeeting = () => {
-  return "Join the meeting by setting up Device media";
+  return "Successfully joined the meeting!";
 };
 
 export default JoinMeeting;

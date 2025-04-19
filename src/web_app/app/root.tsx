@@ -7,9 +7,12 @@ import {
   ScrollRestoration,
 } from "react-router";
 import type { Route } from "./+types/root";
+import CssBaseline from "@mui/material/CssBaseline";
+import { StyledEngineProvider } from "@mui/material/styles";
 
 import "./app.css";
 import AuthProvider from "./auth/AuthProvider";
+import AppTheme from "./shared-theme/AppTheme";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -36,7 +39,7 @@ export function meta({}: Route.MetaArgs) {
       content: "Application to take interviews at Grid Dynamics",
     },
   ];
-};
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -49,6 +52,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -59,7 +63,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <AuthProvider>
-      <Outlet />
+        <AppTheme>
+          <CssBaseline enableColorScheme />
+          <Outlet />
+        </AppTheme>
     </AuthProvider>
   );
 }
