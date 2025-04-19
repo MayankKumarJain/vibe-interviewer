@@ -13,7 +13,7 @@ import MuiCard from "@mui/material/Card";
 import { styled } from "@mui/material/styles";
 import AppTheme from "../shared-theme/AppTheme";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
-import GridDynamicsLogo from "app/assets/Grid_Dynamics_Logo.jpg";
+import GDLogo from "app/assets/gd-logo.svg";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -111,12 +111,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
           sx={{ position: "fixed", top: "1rem", right: "1rem" }}
         />
         <Card variant="outlined">
-          {/* TODO: Add Grid Logo here */}
-          {/* <img
-            src={GridDynamicsLogo}
-            alt="Grid Dynamics"
-            className="block w-full"
-          /> */}
+          <img src={GDLogo} alt="Grid Dynamics" className="w-32" />
           <Typography
             component="h1"
             variant="h4"
@@ -169,6 +164,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 color={passwordError ? "error" : "primary"}
               />
             </FormControl>
+            {/* Add Remember me feature*/}
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"

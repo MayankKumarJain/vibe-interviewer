@@ -23,9 +23,19 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/icon?family=Material+Icons"
-  }
+    href: "https://fonts.googleapis.com/icon?family=Material+Icons",
+  },
 ];
+
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Grid Interview" },
+    {
+      name: "description",
+      content: "Application to take interviews at Grid Dynamics",
+    },
+  ];
+};
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
