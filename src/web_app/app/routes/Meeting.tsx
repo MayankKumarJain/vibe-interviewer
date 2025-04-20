@@ -7,11 +7,15 @@ import VideocamIcon from "@mui/icons-material/Videocam";
 import VideocamOffIcon from "@mui/icons-material/VideocamOff";
 import MicIcon from "@mui/icons-material/Mic";
 import MicOffIcon from "@mui/icons-material/MicOff";
+import { styled } from "@mui/material/styles";
+import Paper from "@mui/material/Paper";
+import Button from "@mui/material/Button";
+import { useNavigate } from "react-router";
+
 import MeetingContainer from "../components/Container";
 import Card from "../components/Card";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
-import { styled } from "@mui/material/styles";
-import Paper from "@mui/material/Paper";
+import { useLocalStream } from "../hooks/localStream";
 
 const MeetingCard = styled(Card)(({ theme }) => ({
   [theme.breakpoints.up("sm")]: {
@@ -22,24 +26,24 @@ const MeetingCard = styled(Card)(({ theme }) => ({
 const ALLOW_AUDIO = true;
 const ALLOW_VIDEO = true;
 export default function Meeting() {
-  // const [allowAudio, setAllowAudio] = useState(true);
-  // const [allowVideo, setAllowVideo] = useState(true);
   const [isAudioOn, setIsAudioOn] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [interviewTitle, setInteriewTitle] = useState("Interview");
   const [interviewTime, setInterviewTime] = useState(new Date());
-  const mediaStream = useRef<MediaStream | null>(null);
+  const [isLocalStreamReady, setIsLocalStreamReady] = useState(false);
+  const mediaStream = useLocalStream();
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const navigate = useNavigate();
 
   const handleSuccess = (stream: MediaStream) => {
     setIsAudioOn(true);
     setIsVideoOn(true);
+    setIsLocalStreamReady(true);
     mediaStream.current = stream;
     if (videoRef.current) videoRef.current.srcObject = stream;
   };
 
   const handleError = (error: Error) => {
-    console.log("Handling Success!");
     // TODO: handle these 2 cases, how play/pause works would need to change
     if (error.name === "OverconstrainedError") {
       errorMsg(
@@ -72,6 +76,7 @@ export default function Meeting() {
     }
     setIsVideoOn(!isVideoOn);
   };
+
   const toggleAudio = () => {
     const audioTracks = mediaStream.current?.getAudioTracks();
     if (!audioTracks || !audioTracks?.length) return;
@@ -79,6 +84,15 @@ export default function Meeting() {
       audioTracks[i].enabled = !audioTracks[i].enabled;
     }
     setIsAudioOn(!isAudioOn);
+  };
+
+  const joinMeeting = () => {
+    navigate("./join", {
+      state: {
+        audio: isAudioOn,
+        video: isVideoOn,
+      },
+    });
   };
 
   useEffect(() => {
@@ -159,10 +173,28 @@ export default function Meeting() {
               aria-label="video"
               autoPlay
               playsInline
+              className="rounded-lg"
             ></video>
           </Paper>
         </Box>
       </MeetingCard>
+      <Box className="w-1/3 self-center">
+        {isLocalStreamReady ? (
+          <Button className="w-full" variant="contained" onClick={joinMeeting}>
+            Join Now
+          </Button>
+        ) : (
+          // TODO: Replacing with loading indicator and info snackbar
+          <Typography
+            className="w-full"
+            variant="subtitle1"
+            component="div"
+            sx={{ color: "text.secondary", whiteSpace: "nowrap" }}
+          >
+            Getting Ready...
+          </Typography>
+        )}
+      </Box>
     </MeetingContainer>
   );
 }

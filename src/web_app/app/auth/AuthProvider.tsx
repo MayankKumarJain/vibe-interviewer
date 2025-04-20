@@ -1,4 +1,4 @@
-import React, { useContext, createContext, useState, Context } from "react";
+import React, { useContext, createContext, useState } from "react";
 import { useNavigate } from "react-router";
 
 type LoginData = {
