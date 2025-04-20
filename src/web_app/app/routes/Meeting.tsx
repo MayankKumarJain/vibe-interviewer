@@ -23,53 +23,17 @@ const MeetingCard = styled(Card)(({ theme }) => ({
   },
 }));
 
-const ALLOW_AUDIO = true;
-const ALLOW_VIDEO = true;
 export default function Meeting() {
   const [isAudioOn, setIsAudioOn] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [interviewTitle, setInteriewTitle] = useState("Interview");
   const [interviewTime, setInterviewTime] = useState(new Date());
-  const [isLocalStreamReady, setIsLocalStreamReady] = useState(false);
   const mediaStream = useLocalStream();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const navigate = useNavigate();
 
-  const handleSuccess = (stream: MediaStream) => {
-    setIsAudioOn(true);
-    setIsVideoOn(true);
-    setIsLocalStreamReady(true);
-    mediaStream.current = stream;
-    if (videoRef.current) videoRef.current.srcObject = stream;
-  };
-
-  const handleError = (error: Error) => {
-    // TODO: handle these 2 cases, how play/pause works would need to change
-    if (error.name === "OverconstrainedError") {
-      errorMsg(
-        `OverconstrainedError: The constraints could not be satisfied by the available devices. Constraints: ${JSON.stringify(
-          { audio: ALLOW_AUDIO, video: ALLOW_VIDEO }
-        )}`
-      );
-    } else if (error.name === "NotAllowedError") {
-      errorMsg(
-        "NotAllowedError: Permissions have not been granted to use your camera and " +
-          "microphone, you need to allow the page access to your devices in " +
-          "order for the demo to work."
-      );
-    }
-    errorMsg(`getUserMedia error: ${error.name}`, error);
-  };
-
-  const errorMsg = (msg: string, error?: Error) => {
-    console.error(msg);
-    if (typeof error !== "undefined") {
-      console.error(error);
-    }
-  };
-
   const toggleVideo = () => {
-    const videoTracks = mediaStream.current?.getVideoTracks();
+    const videoTracks = mediaStream.stream?.getVideoTracks();
     if (!videoTracks || !videoTracks?.length) return;
     for (var i = 0; i < videoTracks.length; ++i) {
       videoTracks[i].enabled = !videoTracks[i].enabled;
@@ -78,7 +42,7 @@ export default function Meeting() {
   };
 
   const toggleAudio = () => {
-    const audioTracks = mediaStream.current?.getAudioTracks();
+    const audioTracks = mediaStream.stream?.getAudioTracks();
     if (!audioTracks || !audioTracks?.length) return;
     for (var i = 0; i < audioTracks.length; ++i) {
       audioTracks[i].enabled = !audioTracks[i].enabled;
@@ -96,16 +60,12 @@ export default function Meeting() {
   };
 
   useEffect(() => {
-    if (ALLOW_AUDIO || ALLOW_VIDEO) {
-      navigator.mediaDevices
-        .getUserMedia({
-          audio: ALLOW_AUDIO,
-          video: ALLOW_VIDEO,
-        })
-        .then((stream) => handleSuccess(stream))
-        .catch((e) => handleError(e));
+    if (mediaStream.ready) {
+      setIsAudioOn(true);
+      setIsVideoOn(true);
+      if (videoRef.current) videoRef.current.srcObject = mediaStream.stream;
     }
-  }, []);
+  }, [mediaStream.ready]);
 
   return (
     <MeetingContainer>
@@ -179,7 +139,7 @@ export default function Meeting() {
         </Box>
       </MeetingCard>
       <Box className="w-1/3 self-center">
-        {isLocalStreamReady ? (
+        {mediaStream.ready ? (
           <Button className="w-full" variant="contained" onClick={joinMeeting}>
             Join Now
           </Button>

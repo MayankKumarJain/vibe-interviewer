@@ -1,21 +1,23 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router";
 import Box from "@mui/material/Box";
 import CardActions from "@mui/material/CardActions";
 import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import VideocamOffIcon from "@mui/icons-material/VideocamOff";
 import MicIcon from "@mui/icons-material/Mic";
 import MicOffIcon from "@mui/icons-material/MicOff";
-import { styled } from "@mui/material/styles";
+import CallEndIcon from "@mui/icons-material/CallEnd";
+import { styled, SxProps } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
-import { useLocation } from "react-router";
+
 import MeetingContainer from "../components/Container";
 import Card from "../components/Card";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
 import { useLocalStream } from "../hooks/localStream";
+import usePeerConnection from "../hooks/PeerConnection";
 
-const MeetingCard = styled(Card)(({ theme }) => ({
+const MeetingCard = styled(Card)(() => ({
   width: "100%",
 }));
 
@@ -23,20 +25,36 @@ export default function JoinMeeting() {
   const [isAudioOn, setIsAudioOn] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const localStream = useLocalStream();
+  const {peerConnection, remoteStream, isRemoteStreamReady} = usePeerConnection();
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const { state } = useLocation();
 
+  const iconBaseStyles: SxProps = {
+    height: 48,
+    width: 48,
+    padding: 1,
+  };
+
   useEffect(() => {
     if (localVideoRef.current) {
-      localVideoRef.current.srcObject = localStream.current;
+      localVideoRef.current.srcObject = localStream.stream;
     }
-    setIsAudioOn(state.audio);
-    setIsVideoOn(state.video);
-  }, []);
+    if (state && state.audio !== undefined && state.video !== undefined) {
+      setIsAudioOn(state.audio ?? false);
+      setIsVideoOn(state.video ?? false);
+    }
+  }, [localStream.ready]);
+
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream.current) {
+      console.log({ rem: remoteStream.current });
+      remoteVideoRef.current.srcObject = remoteStream.current;
+    }
+  }, [isRemoteStreamReady]);
 
   const toggleVideo = () => {
-    const videoTracks = localStream.current?.getVideoTracks();
+    const videoTracks = localStream.stream?.getVideoTracks();
     if (!videoTracks || !videoTracks?.length) return;
     for (var i = 0; i < videoTracks.length; ++i) {
       videoTracks[i].enabled = !videoTracks[i].enabled;
@@ -45,13 +63,23 @@ export default function JoinMeeting() {
   };
 
   const toggleAudio = () => {
-    const audioTracks = localStream.current?.getAudioTracks();
+    const audioTracks = localStream.stream?.getAudioTracks();
     if (!audioTracks || !audioTracks?.length) return;
     for (var i = 0; i < audioTracks.length; ++i) {
       audioTracks[i].enabled = !audioTracks[i].enabled;
     }
     setIsAudioOn(!isAudioOn);
   };
+
+  const hangUp = () => {
+    if (peerConnection.current) {
+      peerConnection.current.close();
+      peerConnection.current = null;
+    }
+    if (localStream.stream) {
+      localStream.close();
+    }
+  }
 
   return (
     <MeetingContainer>
@@ -92,35 +120,22 @@ export default function JoinMeeting() {
             gap: 2,
           }}
         >
-          <IconButton aria-label="video play/pause">
+          <IconButton aria-label="video play/pause" sx={iconBaseStyles}>
             {!isVideoOn ? (
-              <VideocamOffIcon
-                color="error"
-                sx={{ height: 38, width: 38 }}
-                onClick={() => toggleVideo()}
-              />
+              <VideocamOffIcon color="error" onClick={toggleVideo} />
             ) : (
-              <VideocamIcon
-                color="info"
-                sx={{ height: 38, width: 38 }}
-                onClick={() => toggleVideo()}
-              />
+              <VideocamIcon color="info" onClick={toggleVideo} />
             )}
           </IconButton>
-          <IconButton aria-label="audio play/pause">
+          <IconButton aria-label="audio play/pause" sx={iconBaseStyles}>
             {!isAudioOn ? (
-              <MicOffIcon
-                color="error"
-                sx={{ height: 38, width: 38 }}
-                onClick={() => toggleAudio()}
-              />
+              <MicOffIcon color="error" onClick={toggleAudio} />
             ) : (
-              <MicIcon
-                color="info"
-                sx={{ height: 38, width: 38 }}
-                onClick={() => toggleAudio()}
-              />
+              <MicIcon color="info" onClick={toggleAudio} />
             )}
+          </IconButton>
+          <IconButton aria-label="hangup" sx={iconBaseStyles}>
+            <CallEndIcon onClick={hangUp} color="error"></CallEndIcon>
           </IconButton>
         </CardActions>
       </MeetingCard>

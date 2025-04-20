@@ -26,9 +26,13 @@ const AuthContext = createContext({
 } as AuthDetails);
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [userId, setUserId] = useState(null);
-  const [userRole, setUserRole] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token") || null);
+  const [userId, setUserId] = useState(
+    sessionStorage.getItem("userId") || null
+  );
+  const [userRole, setUserRole] = useState(
+    sessionStorage.getItem("userRole") || null
+  );
+  const [token, setToken] = useState(sessionStorage.getItem("token") || null);
   
   const navigate = useNavigate();
   const loginAction = async (data: LoginData) => {
@@ -45,7 +49,9 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUserId(res.userId);
         setUserRole(res.role);
         setToken(res.token);
-        localStorage.setItem("token", res.token);
+        sessionStorage.setItem("userId", res.userId);
+        sessionStorage.setItem("userRole", res.role);
+        sessionStorage.setItem("token", res.token);
         
         const meetingPath = localStorage.getItem("meeting-path");
         const redirectPath = meetingPath ? meetingPath : '/';
